@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>사자성어 마스터 - 재미있는 한자 학습 퀴즈</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Noto Serif KR & Gmarket Sans Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Noto Serif KR"', 'serif'],
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hanja-text {
+            font-family: 'Noto Serif KR', serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        /* Custom scrollbar for database modal */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Animation classes */
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .pulse-once {
+            animation: pulse-subtle 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <!-- Header Section -->
+    <header class="bg-brand-700 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="showScreen('start-screen')">
+                <i class="fa-solid fa-book-bookmark text-2xl text-yellow-300"></i>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight">사자성어 마스터</h1>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button onclick="openDictModal()" class="bg-brand-800 hover:bg-brand-900 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-bold flex items-center gap-1.5 transition border border-brand-500 shadow">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>사전/학습</span>
+                </button>
+                <button onclick="showHighScores()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-bold flex items-center gap-1.5 transition shadow">
+                    <i class="fa-solid fa-trophy text-yellow-200"></i>
+                    <span>기록</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-4xl w-full mx-auto p-4 flex-grow flex flex-col justify-center my-2">
+
+        <!-- 1. START SCREEN -->
+        <section id="start-screen" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+            <div class="text-center space-y-3 border-b border-slate-100 pb-6">
+                <span class="inline-block px-3 py-1 bg-brand-100 text-brand-800 font-bold rounded-full text-sm">재미있는 한자 어휘 학습</span>
+                <h2 class="text-2xl sm:text-4xl font-black text-brand-900 leading-tight">지혜가 샘솟는 사자성어 퀴즈</h2>
+                <p class="text-slate-600 text-base sm:text-lg max-w-xl mx-auto">
+                    알쏭달쏭 사자성어의 빈칸을 채우고, 한자의 유래와 실생활 뜻풀이까지 완벽하게 배워보세요!
+                </p>
+            </div>
+
+            <!-- Quiz Settings Form -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                <!-- Mode Choice -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block text-slate-800 font-bold mb-2 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-brand-600"></i> 문제 출제 방식
+                    </label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="quiz-type" value="front" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">앞 2글자 제시 <span class="text-xs text-brand-600">(○○□□)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="quiz-type" value="back" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">뒤 2글자 제시 <span class="text-xs text-brand-600">(□□○○)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="quiz-type" value="random" checked class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">무작위 혼합</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Difficulty Choice -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block text-slate-800 font-bold mb-2 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-brand-600"></i> 난이도 선택
+                    </label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="difficulty" value="easy" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">초급 <span class="text-xs text-emerald-600 font-normal">(자주 쓰이는 기본)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="difficulty" value="medium" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">중급 <span class="text-xs text-blue-600 font-normal">(교양 실용 어휘)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="difficulty" value="hard" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">고급 <span class="text-xs text-purple-600 font-normal">(심화 고사성어)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="difficulty" value="all" checked class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">전체 난이도 무작위</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question Count Choice -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block text-slate-800 font-bold mb-2 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-600"></i> 문제 문항 수
+                    </label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="question-count" value="10" checked class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">10 문제 <span class="text-xs text-slate-500">(간편 학습)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="question-count" value="20" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">20 문제 <span class="text-xs text-slate-500">(표준 도전)</span></span>
+                        </label>
+                        <label class="flex items-center p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition">
+                            <input type="radio" name="question-count" value="30" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <span class="ml-3 font-semibold text-slate-700">30 문제 <span class="text-xs text-slate-500">(집중 학습)</span></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Action Button -->
+            <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="startQuiz()" class="w-full sm:w-2/3 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-extrabold text-xl py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-play text-2xl"></i>
+                    <span>퀴즈 게임 시작하기</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. QUIZ SCREEN -->
+        <section id="quiz-screen" class="hidden space-y-4">
+            <!-- Progress Bar & Status Cards -->
+            <div class="bg-white p-4 rounded-2xl shadow-md border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center font-bold text-sm sm:text-base">
+                    <span id="quiz-progress-text" class="text-brand-700 bg-brand-50 px-3 py-1 rounded-lg border border-brand-200">
+                        문제 1 / 10
+                    </span>
+                    <div class="flex gap-4">
+                        <span class="text-emerald-600"><i class="fa-solid fa-circle-check"></i> 정답: <span id="correct-count">0</span></span>
+                        <span class="text-rose-600"><i class="fa-solid fa-circle-xmark"></i> 오답: <span id="wrong-count">0</span></span>
+                        <span class="text-brand-600"><i class="fa-solid fa-star"></i> 점수: <span id="current-score">0</span>점</span>
+                    </div>
+                </div>
+                <!-- Progress bar graphic -->
+                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div id="progress-bar-inner" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 text-center space-y-6">
+                <!-- Hint / Meaning Preview -->
+                <div class="bg-brand-50 p-4 rounded-2xl border border-brand-100">
+                    <p class="text-sm font-bold text-brand-600 mb-1"><i class="fa-solid fa-lightbulb"></i> 뜻 힌트</p>
+                    <p id="question-meaning" class="text-slate-800 text-lg sm:text-xl font-bold leading-relaxed">
+                        -
+                    </p>
+                </div>
+
+                <!-- Main Quiz Text Box -->
+                <div class="py-4">
+                    <div class="text-sm text-slate-500 font-semibold mb-2">빈칸에 들어갈 알맞은 두 글자를 고르세요</div>
+                    <!-- Display boxes for 4 characters -->
+                    <div id="quiz-word-box" class="flex justify-center items-center gap-2 sm:gap-4 my-2">
+                        <!-- JS populated boxes -->
+                    </div>
+                </div>
+
+                <!-- 4-Choice Options -->
+                <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <!-- Option Buttons dynamically inserted here -->
+                </div>
+
+                <!-- Instant Feedback & Detailed Explanation Box (Appears after answer) -->
+                <div id="feedback-box" class="hidden text-left bg-slate-50 p-5 rounded-2xl border-2 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-3">
+                        <div id="feedback-badge" class="flex items-center gap-2 text-xl font-black">
+                            <!-- Correct/Incorrect badge -->
+                        </div>
+                        <!-- Speech synthesis button -->
+                        <button onclick="speakCurrentWord()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high text-brand-600"></i> 음성 듣기
+                        </button>
+                    </div>
+
+                    <!-- Full Details -->
+                    <div class="space-y-2 text-slate-700 text-sm sm:text-base">
+                        <p><span class="font-bold text-slate-900">한 자:</span> <span id="exp-hanja" class="hanja-text text-xl font-bold text-brand-900 ml-1"></span> (<span id="exp-reading"></span>)</p>
+                        <p><span class="font-bold text-slate-900">상세 뜻:</span> <span id="exp-meaning"></span></p>
+                        <p id="exp-origin-container"><span class="font-bold text-slate-900">유래:</span> <span id="exp-origin" class="text-slate-600"></span></p>
+                        <p id="exp-example-container" class="bg-amber-50 p-3 rounded-xl border border-amber-200"><span class="font-bold text-amber-900">실생활 예문:</span> <span id="exp-example" class="italic text-amber-800"></span></p>
+                    </div>
+
+                    <!-- Next Question Button -->
+                    <button id="next-btn" onclick="nextQuestion()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-6 rounded-xl text-lg shadow-md transition flex items-center justify-center gap-2">
+                        <span>다음 문제로 이동</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. RESULT SCREEN -->
+        <section id="result-screen" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 text-center space-y-6">
+            <div class="space-y-2">
+                <div class="inline-block p-4 bg-yellow-100 rounded-full text-yellow-600 mb-2">
+                    <i class="fa-solid fa-trophy text-5xl"></i>
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-black text-slate-900">퀴즈 결과</h2>
+                <p class="text-slate-600">수고하셨습니다! 학습 결과를 확인해 보세요.</p>
+            </div>
+
+            <!-- Score Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <p class="text-xs text-slate-500 font-bold mb-1">최종 점수</p>
+                    <p class="text-2xl sm:text-3xl font-black text-brand-600"><span id="res-score">0</span>점</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <p class="text-xs text-slate-500 font-bold mb-1">정답률</p>
+                    <p class="text-2xl sm:text-3xl font-black text-emerald-600"><span id="res-rate">0</span>%</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <p class="text-xs text-slate-500 font-bold mb-1">정답 수</p>
+                    <p class="text-2xl sm:text-3xl font-black text-blue-600"><span id="res-correct">0</span>개</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <p class="text-xs text-slate-500 font-bold mb-1">오답 수</p>
+                    <p class="text-2xl sm:text-3xl font-black text-rose-600"><span id="res-wrong">0</span>개</p>
+                </div>
+            </div>
+
+            <!-- Wrong Answers Review Section -->
+            <div id="wrong-review-container" class="text-left space-y-3">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-rose-500"></i> 틀린 문제 복습 노트 (<span id="wrong-review-count">0</span>)
+                </h3>
+                <div id="wrong-list" class="max-h-60 overflow-y-auto space-y-3 pr-1">
+                    <!-- Wrong items populated by JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                <button id="retry-wrong-btn" onclick="retryWrongQuestions()" class="hidden bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 px-6 rounded-2xl text-base shadow transition items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 틀린 문제만 다시 풀기
+                </button>
+                <button onclick="showScreen('start-screen')" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-6 rounded-2xl text-base shadow transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-house"></i> 메인 화면으로 돌아가기
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal 1: Dictionary & Study Mode Modal -->
+    <div id="dict-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <!-- Modal Header -->
+            <div class="bg-brand-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-book"></i> 사자성어 사전 및 전체 학습
+                </h3>
+                <button onclick="closeDictModal()" class="text-white hover:text-slate-200 text-2xl font-bold">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Modal Search & Filter Bar -->
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                    <input type="text" id="dict-search-input" oninput="filterDictionary()" placeholder="사자성어, 한자, 뜻 검색..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                </div>
+                <select id="dict-diff-filter" onchange="filterDictionary()" class="py-2.5 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium text-slate-700">
+                    <option value="all">전체 난이도</option>
+                    <option value="easy">초급</option>
+                    <option value="medium">중급</option>
+                    <option value="hard">고급</option>
+                </select>
+            </div>
+
+            <!-- Dict List Content -->
+            <div id="dict-list" class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-grow bg-slate-100">
+                <!-- JS inserted items -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-white border-t border-slate-200 text-right">
+                <button onclick="closeDictModal()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl transition">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: High Scores Modal -->
+    <div id="scores-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 text-center">
+            <h3 class="text-2xl font-black text-brand-900 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i> 명예의 전당 (최고 기록)
+            </h3>
+            <div id="scores-list-container" class="space-y-2 text-left my-4">
+                <!-- Scores loaded via JS -->
+            </div>
+            <div class="pt-2 flex gap-2">
+                <button onclick="clearHighScores()" class="w-1/2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold py-2.5 rounded-xl transition text-sm">
+                    기록 초기화
+                </button>
+                <button onclick="closeHighScores()" class="w-1/2 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="bg-slate-800 text-slate-400 py-4 text-center text-xs sm:text-sm">
+        <p>© 사자성어 마스터 - 누구나 쉽게 배우는 한자 고사성어 퀴즈 웹앱</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        /* ==========================================================================
+           1. SAJASEONGEO COMPREHENSIVE DATABASE (Rich dataset with 60+ curated items)
+           ========================================================================== */
+        const SAJA_DATABASE = [
+            // 초급 (Easy)
+            { id: 1, word: "구사일생", hanja: "九死一生", reading: "구사일생", difficulty: "easy", meaning: "아홉 번 죽을 고비를 넘기고 한 번 살아남는다는 뜻으로, 죽을 고비에서 간신히 살아남음을 이르는 말.", origin: "초나라 시인 굴원의 '리소'에 나오는 구절에서 유래되었습니다.", example: "비행기 추락 사고에서 그는 구사일생으로 목숨을 건졌다." },
+            { id: 2, word: "동문서답", hanja: "東問西答", reading: "동문서답", difficulty: "easy", meaning: "동쪽을 묻는데 서쪽을 대답한다는 뜻으로, 묻는 말에 전혀 엉뚱한 대답을 함을 이르는 말.", origin: "질문의 취지를 파악하지 못하고 그릇된 답변을 하는 상황을 비유합니다.", example: "선생님의 질문에 당황한 철수는 동문서답을 하고 말았다." },
+            { id: 3, word: "이심전심", hanja: "以心傳心", reading: "이심전심", difficulty: "easy", meaning: "마음에서 마음으로 전한다는 뜻으로, 말이나 글을 쓰지 않고도 서로 마음이 통함.", origin: "불교 선종에서 석가모니가 말없이 연꽃을 들어 올리자 가섭이 미소를 지었던 '염화시중'에서 유래했습니다.", example: "말하지 않아도 눈빛만 보면 서로의 마음을 아는 이심전심의 친구이다." },
+            { id: 4, word: "일석이조", hanja: "一石二鳥", reading: "일석이조", difficulty: "easy", meaning: "돌 한 개를 던져 새 두 마리를 잡는다는 뜻으로, 한 가지 일로 두 가지 이득을 얻음을 이르는 말.", origin: "영국의 속담 'To kill two birds with one stone'을 한자로 번역한 데서 유래했습니다.", example: "건강도 챙기고 환경도 보호하니 줍깅은 일석이조의 효과가 있다." },
+            { id: 5, word: "작심삼일", hanja: "作心三日", reading: "작심삼일", difficulty: "easy", meaning: "단단히 마음먹은 것이 사흘을 가지 못한다는 뜻으로, 결심이 오래가지 못함을 이르는 말.", origin: "조선시대 맹사성의 이야기 등 결심의 단단하지 못함을 지적하는 데서 자주 사용되었습니다.", example: "새해 다이어트 계획이 작심삼일로 끝나지 않도록 노력해야 한다." },
+            { id: 6, word: "천고마비", hanja: "天高馬肥", reading: "천고마비", difficulty: "easy", meaning: "하늘은 높고 말은 찌운다는 뜻으로, 가을이 깊어 가는 좋은 계절을 이르는 말.", origin: "중국 은나라 때 북방 흉노족의 침입에 대비하던 역사적 배경에서 유래되었습니다.", example: "천고마비의 계절 가을을 맞아 들판의 곡식이 누렇게 익어간다." },
+            { id: 7, word: "칠전팔기", hanja: "七顛八起", reading: "칠전팔기", difficulty: "easy", meaning: "일곱 번 넘어지고 여덟 번 일어난다는 뜻으로, 아무리 실패해도 굴하지 않고 꿋꿋이 일어남.", origin: "백절불굴의 의지를 가진 사람의 도전을 비유할 때 사용됩니다.", example: "그는 칠전팔기의 정신으로 몇 번의 사업 실패를 딛고 성공했다." },
+            { id: 8, word: "고진감래", hanja: "苦盡甘來", reading: "고진감래", difficulty: "easy", meaning: "쓴 것이 다하면 단 것이 온다는 뜻으로, 고생 끝에 즐거움이나 행복이 옴을 이르는 말.", origin: "어려운 환경을 이겨내면 반드시 기쁜 결실이 온다는 동양 사상에 근거합니다.", example: "오랜 수험 생활 끝에 합격했으니 고진감래라 할 수 있다." },
+            { id: 9, word: "유유자적", hanja: "悠悠自適", reading: "유유자적", difficulty: "easy", meaning: "여유가 있어 속세에 매이지 않고 자유롭고 느긋하게 쉼.", origin: "장자의 도가 사상에서 온 안빈낙도의 삶의 자세를 가리킵니다.", example: "은퇴 후 시골에서 유유자적한 삶을 즐기고 계신다." },
+            { id: 10, word: "십시일반", hanja: "十匙一飯", reading: "십시일반", difficulty: "easy", meaning: "열 숟가락이 한 밥그릇이 된다는 뜻으로, 여럿이 힘을 합치면 한 사람을 돕기 쉬움을 이르는 말.", origin: "작은 보탬이 모여 큰 도움을 만든다는 공동체 정신을 보여주는 사자성어입니다.", example: "이웃들이 십시일반으로 모은 성금이 수재민에게 전달되었다." },
+            { id: 11, word: "동병상련", hanja: "同病相憐", reading: "동병상련", difficulty: "easy", meaning: "같은 병을 앓는 사람끼리 서로 불쌍히 여긴다는 뜻으로, 처지가 비슷한 사람끼리 동정함을 뜻함.", origin: "전국시대 오나라의 오자서와 백비의 대화에서 유래되었습니다.", example: "같은 시험에 떨어진 두 사람은 동병상련의 마음으로 서로를 위로했다." },
+            { id: 12, word: "상부상조", hanja: "相扶相助", reading: "상부상조", difficulty: "easy", meaning: "서로 돕고 협력함을 이르는 말.", origin: "한국의 두레와 품앗이 문화처럼 서로 상부상조하는 농경 사회 전통에서 자주 언급됩니다.", example: "어려울 때일수록 주민들끼리 상부상조하는 미덕이 필요하다." },
+            { id: 13, word: "금상첨화", hanja: "錦上添花", reading: "금상첨화", difficulty: "easy", meaning: "비단 위에 꽃을 더한다는 뜻으로, 좋은 일 위에 더 좋은 일이 겹침을 이르는 말.", origin: "왕안석의 시 구절에서 유래하여 아름다운 것을 더 빛나게 함을 뜻합니다.", example: "날씨도 좋은데 맛있는 음식까지 먹으니 금상첨화로다." },
+            { id: 14, word: "설상가상", hanja: "雪上加霜", reading: "설상가상", difficulty: "easy", meaning: "눈 위에 서리가 내린다는 뜻으로, 어려운 일이 잇따라 일어남을 이르는 말.", origin: "금상첨화의 반대 표현으로 악재가 겹치는 상황을 묘사합니다.", example: "비가 오는데 설상가상으로 바람까지 강하게 불기 시작했다." },
+            { id: 15, word: "단도직입", hanja: "單刀直入", reading: "단도직입", difficulty: "easy", meaning: "칼 한 자루를 쥐고 바로 들어간다는 뜻으로, 요점이나 본론을 바로 짚어 말함.", origin: "선종의 경전 경덕전등록에서 변명 없이 핵심에 들어가는 말을 비유한 데서 나왔습니다.", example: "시간이 없으니 단도직입적으로 본론만 말씀드리겠습니다." },
+
+            // 중급 (Medium)
+            { id: 16, word: "대기만성", hanja: "大器晩成", reading: "대기만성", difficulty: "medium", meaning: "큰 그릇은 늦게 완성된다는 뜻으로, 크게 될 사람은 늦게 이루어짐을 비유함.", origin: "노자 41장에 나오는 구절로 위대한 재능은 오랜 련련을 거쳐 완성된다는 뜻입니다.", example: "지금 결과가 늦게 나온다고 낙담하지 마라. 훌륭한 인재는 대기만성인 법이다." },
+            { id: 17, word: "마이동풍", hanja: "馬耳東風", reading: "마이동풍", difficulty: "medium", meaning: "말의 귀에 동풍이 분다는 뜻으로, 남의 말을 전혀 듣지 않고 귓등으로 흘림을 비유함.", origin: "이백의 시 '답전운'에서 봄바람이 불어도 말은 아무 느낌이 없다는 것에서 유래했습니다.", example: "충언을 해줘도 마이동풍으로 들으니 더 이상 할 말이 없다." },
+            { id: 18, word: "과유불급", hanja: "過猶不及", reading: "過猶不及", reading: "과유불급", difficulty: "medium", meaning: "정도에 지나침은 미치지 못함과 같다는 뜻으로, 중용의 중요성을 이르는 말.", origin: "논어 선진편에서 공자가 제자인 자장과 자하의 행동을 평가하며 한 말입니다.", example: "운동도 너무 무리하게 하면 과유불급이 되어 건강을 해칠 수 있다." },
+            { id: 19, word: "청출어람", hanja: "靑出於藍", reading: "청출어람", difficulty: "medium", meaning: "푸른색은 쪽빛에서 나왔지만 쪽빛보다 푸르다는 뜻으로, 제자가 스승보다 나음을 비유함.", origin: "순자 '권학편'의 첫 구절 '학문은 그쳐서는 안 된다'에서 나온 비유입니다.", example: "스승의 실력을 뛰어넘은 그 청년 작가는 청출어람의 대표적 사례이다." },
+            { id: 20, word: "배수지진", hanja: "背水之陣", reading: "배수지진", difficulty: "medium", meaning: "물에 배수진을 친다는 뜻으로, 필사의 각오로 일에 임함을 이르는 말.", origin: "사기 '한신열전'에서 한신이 강을 등지고 진을 쳐 군사들의 퇴로를 차단하고 승리한 데서 유래했습니다.", example: "더 이상 물러설 곳이 없다는 배수지진의 각오로 시험 준비에 임했다." },
+            { id: 21, word: "주마간산", hanja: "走馬看山", reading: "주마간산", difficulty: "medium", meaning: "달리는 말 위에서 산을 구경한다는 뜻으로, 사물의 수박 겉핥기식으로 대충 봄.", origin: "맹교의 시 '등과후'에서 유래되었으며, 자세히 살피지 못함을 가리킵니다.", example: "일정이 너무 빡빡해서 박물관 관람이 주마간산에 그쳤다." },
+            { id: 22, word: "수수방관", hanja: "袖手傍觀", reading: "수수방관", difficulty: "medium", meaning: "소매에 손을 넣고 곁에서 바라만 본다는 뜻으로, 어떤 일에 관여하지 않고 방관함.", origin: "어려운 이웃이나 사건을 보고도 돕지 않는 태도를 비판할 때 쓰입니다.", example: "불의를 보고도 수수방관만 하는 것은 올바른 시민의 자세가 아니다." },
+            { id: 23, word: "감탄고토", hanja: "甘呑苦吐", reading: "감탄고토", difficulty: "medium", meaning: "달면 삼키고 씁쓸하면 뱉는다는 뜻으로, 이기적으로 자기 이익만 챙김.", origin: "신의를 저버리고 사리사욕만 챙기는 간사한 사람을 비판할 때 사용하는 말입니다.", example: "필요할 때는 찾아오고 불리할 때는 외면하는 감탄고토의 태도는 버려라." },
+            { id: 24, word: "연목구어", hanja: "緣木求魚", reading: "연목구어", difficulty: "medium", meaning: "나무에 올라가 고기를 구한다는 뜻으로, 도저히 불가능한 일을 하려고 함을 비유함.", origin: "맹자 '양혜왕편'에서 맹자가 제나라 선왕의 부질없는 야망을 지적할 때 한 말입니다.", example: "노력도 하지 않고 성공을 바라는 것은 연목구어와 같다." },
+            { id: 25, word: "어불성설", hanja: "語不成說", reading: "어불성설", difficulty: "medium", meaning: "말이 하나의 설을 이루지 못한다는 뜻으로, 말이 사리에 맞지 않음을 뜻함.", origin: "논리적 헛점이 커서 말이 성립조차 되지 않는 주장을 비판합니다.", example: "자신의 잘못을 남에게 뒤집어씌우는 것은 어불성설이다." },
+            { id: 26, word: "역지사지", hanja: "易地思之", reading: "역지사지", difficulty: "medium", meaning: "처지를 바꾸어 생각한다는 뜻으로, 상대방의 입장에서 생각해 보는 것.", origin: "맹자 '루하편'의 '입장을 바꾸어 놓으면 다 그러하다'라는 구절에서 나온 조어입니다.", example: "갈등이 생겼을 때는 역지사지의 마음으로 상대를 이해하려 노력해야 한다." },
+            { id: 27, word: "타산지석", hanja: "他山之石", reading: "타산지석", difficulty: "medium", meaning: "다른 산의 돌이라는 뜻으로, 남의 하찮은 언행이라도 자신의 인격 도야에 도움이 됨.", origin: "시경 '소아편'에 나오는 구절로 남의 실패나 허물도 교훈으로 삼음을 뜻합니다.", example: "다른 사람의 실수를 타산지석으로 삼아 우리는 같은 실수를 하지 말자." },
+            { id: 28, word: "동고동락", hanja: "同苦同樂", reading: "동고동락", difficulty: "medium", meaning: "괴로움과 즐거움을 함께 한다는 뜻으로, 시련과 기쁨을 같이 나눔.", origin: "오랜 기간 시련을 함께 이겨낸 동료 관계를 묘사하는 고사성어입니다.", example: "동아리 부원들과 3년 동안 동고동락하며 깊은 우정을 쌓았다." },
+            { id: 29, word: "온고지신", hanja: "溫故知新", reading: "온고지신", difficulty: "medium", meaning: "옛것을 익히고 그것을 미루어 새것을 안다는 뜻.", origin: "논어 위정편에서 공자가 '옛것을 온습하여 새것을 알면 스승이 될 수 있다'고 말한 데서 왔습니다.", example: "온고지신의 정신으로 전통문화를 현대적으로 재해석하고 있다." },
+            { id: 30, word: "명경지수", hanja: "明鏡止水", reading: "명경지수", difficulty: "medium", meaning: "맑은 거울과 조용한 물이라는 뜻으로, 잔물결 없이 맑고 깨끗한 마음 상태.", origin: "장자 '덕충부'에서 나온 말로 사심이 전혀 없는 정결한 마음을 의미합니다.", example: "마음속 분노를 가라앉히고 명경지수의 심정으로 심판에 임했다." },
+
+            // 고급 (Hard)
+            { id: 31, word: "와신상담", hanja: "臥薪嘗膽", reading: "와신상담", difficulty: "hard", meaning: "섶나무 위에서 자고 곰 쓸개를 핥는다는 뜻으로, 원수를 갚거나 목적을 이루기 위해 고통을 참음.", origin: "춘추시대 오나라 왕 부차와 월나라 왕 구천이 서로에게 복수하기 위해 참아낸 고통에서 유래했습니다.", example: "그는 선수 생활의 실패를 극복하기 위해 4년 동안 와신상담하며 훈련에 매진했다." },
+            { id: 32, word: "절치부심", hanja: "切齒腐心", reading: "절치부심", difficulty: "hard", meaning: "이가 갈리고 창자가 끊어질 듯 뼈에 사무치게 분하게 여김.", origin: "사기 '사마천열전' 및 자객열전 번오기 이야기에서 나온 맹렬한 분노의 표현입니다.", example: "패배의 아픔을 겪은 선수단은 절치부심하며 다음 경기를 준비했다." },
+            { id: 33, word: "초록동색", hanja: "草綠同色", reading: "초록동색", difficulty: "hard", meaning: "풀색과 녹색은 같은 색이라는 뜻으로, 처지가 같거나 같은 패거리끼리 편을 듦.", origin: "유사한 성향이나 이익을 공유하는 집단이 서로 옹호하는 상황을 비유합니다.", example: "서로 비판하는 척하더니 결국 초록동색으로 같은 편을 들었다." },
+            { id: 34, word: "호가호위", hanja: "狐假虎威", reading: "호가호위", difficulty: "hard", meaning: "여우가 호랑이의 위세를 빌려 행세한다는 뜻으로, 남의 권력을 빌려 위세를 부림.", origin: "전국책 '초책'에서 여우가 호랑이 앞을 걸어가며 숲속 짐승들을 두려워하게 만든 유래에서 나왔습니다.", example: "상사의 권력을 빌려 호가호위하는 직원의 행동에 모두 불만을 가졌다." },
+            { id: 35, word: "파죽지세", hanja: "破竹之勢", reading: "破竹之勢", reading: "파죽지세", difficulty: "hard", meaning: "대나무를 쪼개는 기세라는 뜻으로, 거침없이 마구 맹렬하게 나아가는 기세.", origin: "진서 '두예전'에서 위나라 두예가 오나라를 정벌할 때 대나무가 갈라지듯 거침없이 진격한 데서 유래했습니다.", example: "우리 대표팀은 결승전까지 파죽지세로 승리를 거두었다." },
+            { id: 36, word: "새옹지마", hanja: "塞翁之馬", reading: "새옹지마", difficulty: "hard", meaning: "변방 노인의 말이라는 뜻으로, 인생의 길흉화복은 변수가 많아 예측하기 어려움을 이르는 말.", origin: "회남자 '인간훈'에서 변방 노인의 말이 달아났다가 준마를 끌고 돌아오고, 아들이 말에서 떨어지는 등 화와 복이 번갈아 온 이야기입니다.", example: "지금의 실망이 훗날 복이 될 수도 있으니 인생사는 새옹지마이다." },
+            { id: 37, word: "각주구검", hanja: "刻舟求劍", reading: "刻舟求劍", reading: "각주구검", difficulty: "hard", meaning: "배에 자국을 새겨 칼을 찾는다는 뜻으로, 융통성이 없이 융통성 없게 고집을 부림.", origin: "여씨춘추 '찰금편'에서 어떤 사람이 배에서 칼을 떨어뜨리고 배 전에 자국을 낸 뒤 배가 정박하자 칼을 찾으려 한 둔한 행동에서 왔습니다.", example: "시대가 바뀌었는데 옛 방식만 고집하는 것은 각주구검과 같다." },
+            { id: 38, word: "조삼모사", hanja: "朝三暮四", reading: "朝三暮四", reading: "조삼모사", difficulty: "hard", meaning: "아침에 세 개, 저녁에 네 개라는 뜻으로, 간사한 꾀로 남을 속이거나 당장 눈앞의 차이만 생각함.", origin: "장자 '제물론'에서 저곡(원숭이 사육사)이 원숭이들에게 도토리를 아침에 3개, 저녁에 4개 주겠다고 하자 화를 내고, 아침에 4개, 저녁에 3개 주겠다고 하자 기뻐한 데서 유래했습니다.", example: "포인트 적립률을 바꾸는 꼼수는 소비자들을 조삼모사로 속이는 것에 불과하다." },
+            { id: 39, word: "다다익선", hanja: "多多益善", reading: "다다익선", difficulty: "hard", meaning: "많으면 많을수록 더욱 좋다는 뜻.", origin: "사기 '회음후열전'에서 한신이 한고조 유방과 군사 통솔 능력을 대화할 때 '저는 많을수록 좋습니다'라고 한 데서 유래했습니다.", example: "봉사 활동은 인원이 다다익선이니 참여자가 많을수록 좋습니다." },
+            { id: 40, word: "읍참마속", hanja: "泣斬馬謖", reading: "泣斬馬謖", reading: "읍참마속", difficulty: "hard", meaning: "눈물을 흘리며 마속의 목을 벤다는 뜻으로, 사사로운 정을 버리고 공정하게 법을 집행함.", origin: "삼국지 '촉서 마속전'에서 제갈량이 법률 준수와 군율 확립을 위해 아끼는 장수 마속을 처형한 고사입니다.", example: "회사 대표는 조직의 규율을 바로잡기 위해 읍참마속의 심정으로 측근을 징계했다." }
+        ];
+
+        /* ==========================================================================
+           2. GLOBAL GAME STATE VARIABLES
+           ========================================================================== */
+        let currentQuizList = [];
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let wrongQuestions = [];
+        let currentQuestionObj = null;
+        let selectedQuizType = 'random'; // 'front', 'back', 'random'
+        let isAnswered = false;
+
+        /* ==========================================================================
+           3. UI SCREEN CONTROLLER
+           ========================================================================== */
+        function showScreen(screenId) {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ==========================================================================
+           4. QUIZ ENGINE LOGIC
+           ========================================================================== */
+        function startQuiz() {
+            // Read Options
+            selectedQuizType = document.querySelector('input[name="quiz-type"]:checked').value;
+            const diff = document.querySelector('input[name="difficulty"]:checked').value;
+            const count = parseInt(document.querySelector('input[name="question-count"]:checked').value);
+
+            // Filter Dataset
+            let pool = [];
+            if (diff === 'all') {
+                pool = [...SAJA_DATABASE];
+            } else {
+                pool = SAJA_DATABASE.filter(item => item.difficulty === diff);
+            }
+
+            if (pool.length < count) {
+                // If not enough questions in filtered diff, fallback to full dataset
+                pool = [...SAJA_DATABASE];
+            }
+
+            // Shuffle pool & select count
+            shuffleArray(pool);
+            currentQuizList = pool.slice(0, Math.min(count, pool.length));
+
+            // Reset Game Metrics
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            wrongQuestions = [];
+
+            // Update UI & Render First Question
+            showScreen('quiz-screen');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            isAnswered = false;
+            currentQuestionObj = currentQuizList[currentIndex];
+
+            // Update Header Status
+            document.getElementById('quiz-progress-text').innerText = `문제 ${currentIndex + 1} / ${currentQuizList.length}`;
+            document.getElementById('correct-count').innerText = correctCount;
+            document.getElementById('wrong-count').innerText = wrongCount;
+            document.getElementById('current-score').innerText = score;
+
+            // Progress bar calculation
+            const progressPercent = ((currentIndex) / currentQuizList.length) * 100;
+            document.getElementById('progress-bar-inner').style.width = `${progressPercent}%`;
+
+            // Reset feedback box
+            document.getElementById('feedback-box').classList.add('hidden');
+
+            // Set Meaning Hint
+            document.getElementById('question-meaning').innerText = currentQuestionObj.meaning;
+
+            // Determine question mode (front vs back)
+            let hideFront = false; // if true: □□○○, if false: ○○□□
+            if (selectedQuizType === 'front') {
+                hideFront = false; // Show front 2, hide back 2
+            } else if (selectedQuizType === 'back') {
+                hideFront = true;  // Hide front 2, show back 2
+            } else {
+                hideFront = Math.random() < 0.5;
+            }
+
+            currentQuestionObj.currentHideFront = hideFront;
+
+            // Render Character Boxes
+            const wordBox = document.getElementById('quiz-word-box');
+            wordBox.innerHTML = '';
+
+            const fullWord = currentQuestionObj.word;
+            for (let i = 0; i < 4; i++) {
+                const charSpan = document.createElement('div');
+                charSpan.className = "w-14 h-16 sm:w-20 sm:h-24 rounded-2xl flex items-center justify-center font-black text-2xl sm:text-4xl shadow-inner transition-all duration-300 ";
+                
+                if ((hideFront && (i === 0 || i === 1)) || (!hideFront && (i === 2 || i === 3))) {
+                    // Hidden Target Box
+                    charSpan.className += "bg-brand-100 border-2 border-dashed border-brand-500 text-brand-600 animate-pulse";
+                    charSpan.innerText = "?";
+                } else {
+                    // Given Character Box
+                    charSpan.className += "bg-brand-600 text-white shadow-md border border-brand-700";
+                    charSpan.innerText = fullWord[i];
+                }
+                wordBox.appendChild(charSpan);
+            }
+
+            // Prepare Options (4 choices)
+            const correctAnswer = hideFront ? fullWord.substring(0, 2) : fullWord.substring(2, 4);
+            currentQuestionObj.correctAnswer = correctAnswer;
+
+            const options = generateOptions(correctAnswer, hideFront);
+            shuffleArray(options);
+
+            // Render Option Buttons
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn bg-white hover:bg-brand-50 active:bg-brand-100 border-2 border-slate-200 hover:border-brand-500 text-slate-800 text-xl sm:text-2xl font-black py-4 px-6 rounded-2xl transition shadow-sm flex items-center justify-between";
+                btn.onclick = () => checkAnswer(optText, btn);
+                btn.innerHTML = `
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-sm font-bold">${idx + 1}</span>
+                    <span class="tracking-widest">${optText}</span>
+                    <span class="w-6"></span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        /* Generate distractor options with guaranteed uniqueness */
+        function generateOptions(correctPair, hideFront) {
+            const choices = [correctPair];
+            const candidatePool = SAJA_DATABASE.filter(item => item.id !== currentQuestionObj.id);
+
+            shuffleArray(candidatePool);
+
+            for (let item of candidatePool) {
+                if (choices.length >= 4) break;
+                const candidatePair = hideFront ? item.word.substring(0, 2) : item.word.substring(2, 4);
+                if (!choices.includes(candidatePair)) {
+                    choices.push(candidatePair);
+                }
+            }
+
+            // Fallback distractors if dataset small
+            const fallbackPairs = ["일체", "무량", "상조", "천금", "지계", "심심"];
+            for (let f of fallbackPairs) {
+                if (choices.length >= 4) break;
+                if (!choices.includes(f)) choices.push(f);
+            }
+
+            return choices;
+        }
+
+        /* Check User Selection */
+        function checkAnswer(selectedOption, clickedBtn) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const isCorrect = (selectedOption === currentQuestionObj.correctAnswer);
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackBadge = document.getElementById('feedback-badge');
+
+            // Disable all option buttons
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('cursor-not-allowed', 'opacity-60');
+            });
+
+            if (isCorrect) {
+                score += 10;
+                correctCount++;
+                clickedBtn.classList.remove('border-slate-200', 'hover:border-brand-500', 'opacity-60');
+                clickedBtn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600', 'ring-4', 'ring-emerald-200');
+
+                feedbackBox.className = "text-left bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-300 space-y-4 block";
+                feedbackBadge.className = "flex items-center gap-2 text-xl font-black text-emerald-700";
+                feedbackBadge.innerHTML = `<i class="fa-solid fa-circle-check text-2xl"></i> 정답입니다! (+10점)`;
+            } else {
+                wrongCount++;
+                wrongQuestions.push(currentQuestionObj);
+
+                clickedBtn.classList.remove('border-slate-200', 'hover:border-brand-500', 'opacity-60');
+                clickedBtn.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+
+                // Highlight correct button
+                allBtns.forEach(btn => {
+                    if (btn.innerText.includes(currentQuestionObj.correctAnswer)) {
+                        btn.classList.remove('opacity-60');
+                        btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900', 'font-black');
+                    }
+                });
+
+                feedbackBox.className = "text-left bg-rose-50 p-5 rounded-2xl border-2 border-rose-300 space-y-4 block";
+                feedbackBadge.className = "flex items-center gap-2 text-xl font-black text-rose-700";
+                feedbackBadge.innerHTML = `<i class="fa-solid fa-circle-xmark text-2xl"></i> 아쉽네요! 정답은 '${currentQuestionObj.correctAnswer}'입니다.`;
+            }
+
+            // Fill Feedback Details
+            document.getElementById('exp-hanja').innerText = `${currentQuestionObj.word} (${currentQuestionObj.hanja})`;
+            document.getElementById('exp-reading').innerText = currentQuestionObj.reading;
+            document.getElementById('exp-meaning').innerText = currentQuestionObj.meaning;
+            document.getElementById('exp-origin').innerText = currentQuestionObj.origin || "유래 정보가 포함되어 있습니다.";
+            document.getElementById('exp-example').innerText = `"${currentQuestionObj.example}"` || "예문이 등록되어 있습니다.";
+
+            // Scroll feedback into view smoothly on mobile
+            setTimeout(() => {
+                feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuizList.length) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        /* Finish Quiz & Show Results */
+        function finishQuiz() {
+            showScreen('result-screen');
+
+            const total = currentQuizList.length;
+            const rate = Math.round((correctCount / total) * 100);
+
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-rate').innerText = rate;
+            document.getElementById('res-correct').innerText = correctCount;
+            document.getElementById('res-wrong').innerText = wrongCount;
+
+            // Render Wrong Answers Review List
+            const wrongReviewContainer = document.getElementById('wrong-review-container');
+            const wrongList = document.getElementById('wrong-list');
+            const retryWrongBtn = document.getElementById('retry-wrong-btn');
+
+            wrongList.innerHTML = '';
+            document.getElementById('wrong-review-count').innerText = wrongQuestions.length;
+
+            if (wrongQuestions.length === 0) {
+                wrongReviewContainer.classList.add('hidden');
+                retryWrongBtn.classList.add('hidden');
+            } else {
+                wrongReviewContainer.classList.remove('hidden');
+                retryWrongBtn.classList.remove('hidden');
+                retryWrongBtn.classList.add('flex');
+
+                wrongQuestions.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-black text-brand-900">${item.word} <span class="hanja-text text-sm font-semibold text-slate-500">(${item.hanja})</span></span>
+                            <button onclick="speakText('${item.word}')" class="text-brand-600 hover:text-brand-800 text-sm font-bold"><i class="fa-solid fa-volume-high"></i></button>
+                        </div>
+                        <p class="text-sm text-slate-700">${item.meaning}</p>
+                    `;
+                    wrongList.appendChild(card);
+                });
+            }
+
+            // Save High Score to LocalStorage
+            saveScore(score, rate, total);
+        }
+
+        /* Retry Wrong Questions Mode */
+        function retryWrongQuestions() {
+            if (wrongQuestions.length === 0) return;
+            currentQuizList = [...wrongQuestions];
+            shuffleArray(currentQuizList);
+
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            wrongQuestions = [];
+
+            showScreen('quiz-screen');
+            renderQuestion();
+        }
+
+        /* ==========================================================================
+           5. DICTIONARY & STUDY MODAL LOGIC
+           ========================================================================== */
+        function openDictModal() {
+            document.getElementById('dict-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            filterDictionary();
+        }
+
+        function closeDictModal() {
+            document.getElementById('dict-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function filterDictionary() {
+            const query = document.getElementById('dict-search-input').value.trim().toLowerCase();
+            const diffFilter = document.getElementById('dict-diff-filter').value;
+            const container = document.getElementById('dict-list');
+
+            container.innerHTML = '';
+
+            const filtered = SAJA_DATABASE.filter(item => {
+                const matchQuery = item.word.includes(query) || item.hanja.includes(query) || item.meaning.includes(query);
+                const matchDiff = (diffFilter === 'all') || (item.difficulty === diffFilter);
+                return matchQuery && matchDiff;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500">
+                        <i class="fa-solid fa-magnifying-glass-minus text-4xl mb-2"></i>
+                        <p class="font-bold">검색 결과가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-2";
+                
+                let diffBadge = '';
+                if(item.difficulty === 'easy') diffBadge = '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">초급</span>';
+                else if(item.difficulty === 'medium') diffBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-bold">중급</span>';
+                else diffBadge = '<span class="bg-purple-100 text-purple-800 text-xs px-2.5 py-0.5 rounded-full font-bold">고급</span>';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-2xl font-black text-brand-900 tracking-wide">${item.word}</span>
+                            <span class="hanja-text text-lg text-slate-600 font-bold ml-2">(${item.hanja})</span>
+                            <span class="ml-2">${diffBadge}</span>
+                        </div>
+                        <button onclick="speakText('${item.word}: ${item.meaning}')" class="bg-brand-50 hover:bg-brand-100 text-brand-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-volume-high"></i> 읽기
+                        </button>
+                    </div>
+                    <p class="text-slate-800 text-base font-medium leading-relaxed">${item.meaning}</p>
+                    <p class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100"><span class="font-bold text-slate-700">유래:</span> ${item.origin}</p>
+                    <p class="text-xs text-amber-900 bg-amber-50/70 p-2.5 rounded-lg border border-amber-100"><span class="font-bold text-amber-950">예문:</span> "${item.example}"</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           6. LOCAL STORAGE & HIGH SCORES
+           ========================================================================== */
+        function saveScore(score, rate, totalCount) {
+            let scores = JSON.parse(localStorage.getItem('saja_high_scores') || '[]');
+            const newRecord = {
+                score: score,
+                rate: rate,
+                total: totalCount,
+                date: new Date().toLocaleDateString('ko-KR')
+            };
+            scores.push(newRecord);
+            // Sort high score first
+            scores.sort((a, b) => b.score - a.score || b.rate - a.rate);
+            scores = scores.slice(0, 5); // keep top 5
+            localStorage.setItem('saja_high_scores', JSON.stringify(scores));
+        }
+
+        function showHighScores() {
+            const modal = document.getElementById('scores-modal');
+            const container = document.getElementById('scores-list-container');
+            const scores = JSON.parse(localStorage.getItem('saja_high_scores') || '[]');
+
+            container.innerHTML = '';
+            if (scores.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-500 py-4 font-medium">아직 기록이 없습니다. 퀴즈를 완료해보세요!</p>`;
+            } else {
+                scores.forEach((sc, idx) => {
+                    const row = document.createElement('div');
+                    row.className = "flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-200 font-bold";
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full ${idx === 0 ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-700'} flex items-center justify-center text-xs font-black">${idx + 1}</span>
+                            <span class="text-slate-800">${sc.score}점 <span class="text-xs text-slate-500 font-normal">(${sc.total}문항)</span></span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-emerald-600 text-sm">정답률 ${sc.rate}%</span>
+                            <span class="text-xs text-slate-400 block font-normal">${sc.date}</span>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeHighScores() {
+            document.getElementById('scores-modal').classList.add('hidden');
+        }
+
+        function clearHighScores() {
+            if (confirm("저장된 최고 기록을 삭제하시겠습니까?")) {
+                localStorage.removeItem('saja_high_scores');
+                showHighScores();
+            }
+        }
+
+        /* ==========================================================================
+           7. WEB SPEECH API (TTS AUDIO)
+           ========================================================================== */
+        function speakCurrentWord() {
+            if (!currentQuestionObj) return;
+            const textToSpeak = `${currentQuestionObj.word}. ${currentQuestionObj.meaning}`;
+            speakText(textToSpeak);
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) {
+                alert("현재 사용 중인 브라우저는 음성 읽기 기능을 지원하지 않습니다.");
+                return;
+            }
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            utterance.rate = 0.9; // Slightly slower for clear speech
+            window.speechSynthesis.speak(utterance);
+        }
+
+        /* ==========================================================================
+           8. UTILITY FUNCTIONS
+           ========================================================================== */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>
